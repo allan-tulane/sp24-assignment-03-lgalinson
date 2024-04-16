@@ -36,5 +36,41 @@ def fast_MED(S, T, MED={}):
     return 1 + min(fast_MED(S, T[1:], MED), fast_MED(S[1:], T, MED))
 
 def fast_align_MED(S, T, MED={}):
-  # TODO - keep track of alignment (I'M SO CONFUSED!!!)
-  pass
+  
+  # Check memoization dictionary for previously computed results
+  if (S, T) in MED:
+    return MED[(S, T)]
+  
+  # If S is empty, align it with '-' for each character in T
+  if not S:
+    return len(T), "-" * len(T), T
+  
+  # If T is empty, align it with '-' for each character in S
+  elif not T:
+    return len(S), S, "-" * len(S)
+  
+  else:
+    if S[0] == T[0]:
+        # If first characters match, continue with the next parts
+        distance, S_align, T_align = fast_align_MED(S[1:], T[1:], MED)
+        MED[(S, T)] = distance, S[0] + S_align, T[0] + T_align
+
+    else:
+        # Compute costs and alignments for inserting, deleting, and substituting
+        ins_distance, ins_S_align, ins_T_align = fast_align_MED(S, T[1:], MED)
+        del_distance, del_S_align, del_T_align = fast_align_MED(S[1:], T, MED)
+        sub_distance, sub_S_align, sub_T_align = fast_align_MED(S[1:], T[1:], MED)
+        min_distance = min(ins_distance, del_distance, sub_distance)
+
+        # Select the operation with the minimum cost and adjust the alignment
+        if min_distance == ins_distance:
+            MED[(S, T)] = 1 + ins_distance, "-" + ins_S_align, T[0] + ins_T_align
+        
+        elif min_distance == del_distance:
+            MED[(S, T)] = 1 + del_distance, S[0] + del_S_align, "-" + del_T_align
+        
+        else:
+            MED[(S, T)] = 1 + sub_distance, S[0] + sub_S_align, T[0] + sub_T_align
+    
+    # Return only the alignments
+    return MED[(S, T)]
